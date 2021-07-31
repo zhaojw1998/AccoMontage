@@ -1,0 +1,9 @@
+./ENCU_leadsheet.mid
+*.pt
+*.npy
+*.npz
+*.txt
+*.xlsx
+./data files/extra songs/
+./nottingham_Dual-track-Direct/
+./.vscode
