@@ -4,9 +4,9 @@
 AccoMontage is a novel accompaniment arrangement system. It introduces a novel hybrid pathway, in which rule-based optimization and deep learning are both leveraged to complement each other for high-quality generation. Our paper *AccoMontage: Accompaniment Arrangement via Phrase Selection and Style Transfer* is accepted by [ISMIR 2021](https://ismir2021.ismir.net/). This repository stores codes and demos of our work.
 
 ## Data and Weights Download
-Data and weights required to reproduce our work can be downloaded [here](https://drive.google.com/drive/folders/14sR11NR7jDPMLtCAYbuK5KwLdc7jSKZv?usp=sharing). These files should be put into `./data files`.
+Data and weights required to reproduce our work can be downloaded [here](https://drive.google.com/drive/folders/14sR11NR7jDPMLtCAYbuK5KwLdc7jSKZv?usp=sharing). The files should be put to `./data files`.
 
-For the sake of fast accompaniment arrangement, our model does not run the deep learning inference evrey time, but loads pre-inferenced transition matrix. This pre-inferenced transition matrix currently supports transition among 4, 6, and 8-bar phrases. `./util_tools/edge_weights_inference.py` can be used to compute transition matrix for other situations.
+For the sake of fast accompaniment arrangement, our model does not run the deep learning inference evrey time, but loads pre-inferenced transition matrix. This pre-inferenced file currently supports transition among 4, 6, and 8-bar phrases. `./util_tools/edge_weights_inference.py` can be used to compute transition matrix for other situations.
 
 ## Run
 To inference with AccoMontage and generate for your own music, run `AccoMontage_inference.py`. Line 191~201 should be configured by yourself.
