@@ -304,7 +304,7 @@ def accompany_matrix2data(pr_matrix, tempo=120, start_time=0.0, get_list=False):
 
 
 if __name__ == '__main__':
-    midi = pyd.PrettyMIDI('C:/Users/lenovo/Desktop/accomontage code/ENCU_leadsheet.mid')
+    midi = pyd.PrettyMIDI('C:/Users/lenovo/Desktop/accomontage code/ECNU_leadsheet.mid')
     melody = midi.instruments[0]
     chord = midi.instruments[1]
     downbeats = midi.get_downbeats()

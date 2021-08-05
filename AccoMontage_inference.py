@@ -197,7 +197,7 @@ PREFILTER = None
 #SONG_NAME, SEGMENTATION, NOTE_SHIFT = "Kitty O'Niel's Champion.mid", 'A4A4B4B4A4A4B4B4\n', 1
 #SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'Castles in the Air.mid', 'A8A8B8B8\n', 1
 #SONG_NAME, SEGMENTATION, NOTE_SHIFT = "Proudlocks's Variation.mid", 'A8A8B8B8\n', 1
-SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'ENCU University Song.mid', 'A8A8B8B8C8D8E4F6A8A8B8B8C8D8E4F6\n', 0
+SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'ECNU University Song.mid', 'A8A8B8B8C8D8E4F6A8A8B8B8C8D8E4F6\n', 0
 SONG_ROOT='./demo lead sheets'
 
 print('Loading Reference Data')
@@ -305,7 +305,7 @@ print('Pitch Transpositon (Fit by Model):', shift)
 #print('Adjusted Pitch Transposition:', shift)
 
 time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-save_path = './demo generate upload/' + SONG_NAME.strip('.mid') + '_' + str(PREFILTER) + '_' + time + '.mid' 
+save_path = './demo generate upload/' + time + '.mid' 
 print('Generating...')
 midi = render_acc(pianoRoll, chord_table, query_seg, path, shift, acc_pool)
 midi.write(save_path)
