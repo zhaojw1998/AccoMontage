@@ -10,9 +10,9 @@ import time
 import datetime
 
 import sys
-sys.path.append('./jingwei_utils')
+sys.path.append('./util_tools')
 from acc_utils import split_phrases, melodySplit, chordSplit, computeTIV, chord_shift, cosine, cosine_rhy, accomapnimentGeneration
-import jingwei_converter as cvt
+import format_converter as cvt
 
 sys.path.append('./models')
 from model import DisentangleVAE
@@ -179,7 +179,7 @@ def render_acc(pianoRoll, chord_table, query_seg, indices, shifts, acc_pool):
     #midiReGen.write('accompaniment_test_NEW.mid')
 
 def ref_spotlight(ref_name_list):
-    df = pd.read_excel("./data files/POP909 4bin quntization/index_new.xlsx")
+    df = pd.read_excel("./data files/POP909 4bin quntization/four_beat_song_index.xlsx")
     check_idx = []
     for name in ref_name_list:
         line = df[df.name == name]
@@ -192,36 +192,41 @@ def ref_spotlight(ref_name_list):
 SPOTLIGHT = ['小龙人']
 PREFILTER = None
 #get query:
-#song_name, segmentation, note_shift = "Morning Star.mid", 'A4A4B8B8\n', 1
-#song_name, segmentation, note_shift = "The 29th of May.mid", 'A4A4B8\n', 0
-#song_name, segmentation, note_shift = "Barry's Favourite.mid", 'A8A8B8C8\n', 1
-#song_name, segmentation, note_shift = 'Boggy Brays.mid', 'A8A8B8B8\n', 0
-SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'ENCU_leadsheet.mid', 'A8A8B8B8C8D8E4F6A8A8B8B8C8D8E4F6\n', 0
-#song_root='./nottingham_Dual-track-Direct'
-SONG_ROOT = './'
+#SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'Boggy Brays.mid', 'A8A8B8B8\n', 0
+#SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'Cuillin Reel.mid', 'A4A4B8B8\n', 1
+#SONG_NAME, SEGMENTATION, NOTE_SHIFT = "Kitty O'Niel's Champion.mid", 'A4A4B4B4A4A4B4B4\n', 1
+#SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'Castles in the Air.mid', 'A8A8B8B8\n', 1
+#SONG_NAME, SEGMENTATION, NOTE_SHIFT = "Proudlocks's Variation.mid", 'A8A8B8B8\n', 1
+SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'ENCU University Song.mid', 'A8A8B8B8C8D8E4F6A8A8B8B8C8D8E4F6\n', 0
+SONG_ROOT='./demo lead sheets'
 
 print('Loading Reference Data')
+#data = np.load('./data files/phrase_data0714.npz', allow_pickle=True)
 data = np.load('./data files/phrase_data0714.npz', allow_pickle=True)
 melody = data['melody']
 acc = data['acc']
 chord = data['chord']
 
 #为节省时间，直接读入边权，而不走模型inference。目前仅支持4小节、6小节，8小节乐句的相互过渡衔接。
+#edge_weights=np.load('./data files/edge_weights_0714.npz', allow_pickle=True)
 edge_weights=np.load('./data files/edge_weights_0714.npz', allow_pickle=True)
 
 print('Processing Query Lead Sheet')
 midi = pyd.PrettyMIDI(os.path.join(SONG_ROOT, SONG_NAME))
 melody_track, chord_track = midi.instruments[0], midi.instruments[1]
 downbeats = midi.get_downbeats()
-melody_matrix = cvt.melody_data2matrix(melody_track, downbeats)[int(NOTE_SHIFT*4):, :]  # T*130, quantized at 16th note
-chroma = cvt.chord_data2matrix(chord_track, downbeats, 'quarter')[int(NOTE_SHIFT*4):, :]  # T*36, quantized at 16th note (quarter beat)
+melody_matrix = cvt.melody_data2matrix(melody_track, downbeats)# T*130, quantized at 16th note
+if not NOTE_SHIFT == 0:
+    melody_matrix = np.concatenate((melody_matrix[int(NOTE_SHIFT*4):, :], melody_matrix[-int(NOTE_SHIFT*4):, :]), axis=0)
+chroma = cvt.chord_data2matrix(chord_track, downbeats, 'quarter')  # T*36, quantized at 16th note (quarter beat)
+if not NOTE_SHIFT == 0:
+    chroma = np.concatenate((chroma[int(NOTE_SHIFT*4):, :], chroma[-int(NOTE_SHIFT*4):, :]), axis=0)
 chord_table = chroma[::4, :] #T'*36, quantized at 4th notes
 chroma = chroma[:, 12: -12] #T*12, quantized at 16th notes
 
 pianoRoll = np.concatenate((melody_matrix, chroma), axis=-1)    #T*142, quantized at 16th
 query_phrases = split_phrases(SEGMENTATION) #[('A', 8, 0), ('A', 8, 8), ('B', 8, 16), ('B', 8, 24)]
 query_seg = [item[0] + str(item[1]) for item in query_phrases]  #['A8', 'A8', 'B8', 'B8']
-#print(query_seg)
 
 melody_queries = []
 for item in query_phrases:
@@ -270,6 +275,7 @@ for key in acc_pool:
     ]
     texture_filter[key] = (HD_Bins, VD_Bins)
 
+
 print('Phrase Selection Begins:\n\t', len(query_phrases), 'phrases in query lead sheet;\n\t', 'Refer to', SPOTLIGHT, 'as much as possible;\n\t', 'Set note density filter:', PREFILTER, '.')
 phrase_indice, chord_shift = new_new_search(
                                         melody_queries, 
@@ -283,7 +289,7 @@ phrase_indice, chord_shift = new_new_search(
 path = phrase_indice[0]
 shift = chord_shift[0]
 reference_set = []
-df = pd.read_excel("./data files/POP909 4bin quntization/index_new.xlsx")
+df = pd.read_excel("./data files/POP909 4bin quntization/four_beat_song_index.xlsx")
 for idx_phrase, phrase in enumerate(query_phrases):
     phrase_len = phrase[1]
     song_ref = acc_pool[phrase_len][-1]
@@ -299,7 +305,7 @@ print('Pitch Transpositon (Fit by Model):', shift)
 #print('Adjusted Pitch Transposition:', shift)
 
 time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-save_path = './demo_generate/' + time + '.mid' 
+save_path = './demo generate upload/' + SONG_NAME.strip('.mid') + '_' + str(PREFILTER) + '_' + time + '.mid' 
 print('Generating...')
 midi = render_acc(pianoRoll, chord_table, query_seg, path, shift, acc_pool)
 midi.write(save_path)

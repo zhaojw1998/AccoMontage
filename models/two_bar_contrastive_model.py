@@ -36,7 +36,7 @@ if __name__ == "__main__":
     sys.path.append('./')
     from ptvae import TextureEncoder
     sys.path.append('./jingwei_contrastive_model')
-    from two_bar_data_loader import two_bar_dataset
+    from transition_model_data_loader import two_bar_dataset
     data_Set = two_bar_dataset('./song_data.npz', 16, 32)
     data_Set.make_batch(16)
     model = contrastive_model( emb_size=256, hidden_dim=1024)

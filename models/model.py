@@ -1,5 +1,6 @@
 import sys
 sys.path.append('./amc_dl')
+sys.path.append('../accomontage code/amc_dl')
 from torch_plus import PytorchModel
 from torch_plus.train_utils import get_zs_from_dists, kl_with_normal
 import torch
@@ -9,6 +10,7 @@ import numpy as np
 
 
 sys.path.append('./models')
+sys.path.append('../accomontage code/models')
 from ptvae import RnnEncoder, RnnDecoder, PtvaeDecoder, \
     TextureEncoder
 

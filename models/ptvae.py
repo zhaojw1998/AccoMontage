@@ -1,5 +1,6 @@
 import sys
 sys.path.append('./amc_dl')
+sys.path.append('../accomontage code/amc_dl')
 from torch_plus import PytorchModel
 import torch
 from torch import nn

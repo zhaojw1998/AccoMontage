@@ -1,9 +1,10 @@
-./ENCU_leadsheet.mid
+.vscode/
+data files/extra songs/
+data files/POP909 4bin quntization/POP09-PIANOROLL-4-bin-quantization/*.npz
+nottingham_Dual-track-Direct/
+demo_generate/
+readme.txt
 *.pt
 *.npy
 *.npz
-*.txt
-*.xlsx
-./data files/extra songs/
-./nottingham_Dual-track-Direct/
-./.vscode
+
