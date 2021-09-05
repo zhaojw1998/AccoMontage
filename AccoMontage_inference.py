@@ -183,12 +183,18 @@ def ref_spotlight(ref_name_list):
     check_idx = []
     for name in ref_name_list:
         line = df[df.name == name]
-        check_idx.append(line.index)#read by pd, neglect first row, index starts from 0.
+        if not line.empty:
+            check_idx.append(line.index)#read by pd, neglect first row, index starts from 0.
     #print(check_idx)
+    for name in ref_name_list:
+        line = df[df.artist == name]
+        if not line.empty:
+            check_idx += list(line.index)#read by pd, neglect first row, index starts from 0
     return check_idx
 
 
 #Configurations upon inference
+#SPOTLIGHT = ['一曲红尘', '向天再借五百年', '夜曲', '我只在乎你', '撕夜', '放生', '明天你是否依然爱我', '映山红', '浪人情歌', '海芋恋', '狂浪生', '用心良苦', '男孩', '祝我生日快乐', '背对背拥抱', '舍得', '葫芦娃', '香水', '小乌龟']
 SPOTLIGHT = ['小龙人']
 PREFILTER = None
 #get query:
@@ -222,6 +228,7 @@ chroma = cvt.chord_data2matrix(chord_track, downbeats, 'quarter')  # T*36, quant
 if not NOTE_SHIFT == 0:
     chroma = np.concatenate((chroma[int(NOTE_SHIFT*4):, :], chroma[-int(NOTE_SHIFT*4):, :]), axis=0)
 chord_table = chroma[::4, :] #T'*36, quantized at 4th notes
+#chord_table[-8:, :] = chord_table[56:64, :]
 chroma = chroma[:, 12: -12] #T*12, quantized at 16th notes
 
 pianoRoll = np.concatenate((melody_matrix, chroma), axis=-1)    #T*142, quantized at 16th
@@ -305,7 +312,7 @@ print('Pitch Transpositon (Fit by Model):', shift)
 #print('Adjusted Pitch Transposition:', shift)
 
 time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-save_path = './demo generate upload/' + time + '.mid' 
+save_path = './demo_generate/' + time + '.mid' 
 print('Generating...')
 midi = render_acc(pianoRoll, chord_table, query_seg, path, shift, acc_pool)
 midi.write(save_path)

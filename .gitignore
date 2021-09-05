@@ -7,4 +7,6 @@ readme.txt
 *.pt
 *.npy
 *.npz
+*.mscz
+*.pyc
 
