@@ -4,6 +4,7 @@ import os
 import sys
 sys.path.append('./util_tools')
 from chordloader import Chord_Loader
+import copy
 
 def expand_chord(chord, shift, relative=False):
     # chord = np.copy(chord)
@@ -83,115 +84,56 @@ def melody_matrix2data(melody_matrix, tempo=120, start_time=0.0, get_list=False)
         melody.notes = melody_notes
         return melody
 
-def chord_data2matrix(chord_track, downbeats, resolution='beat', chord_expand=True):
+def chord_data2matrix(chord_track, downbeats, resolution='beat', chord_expand=True, tolerence=0.125):
     """applicable to triple chords and seventh chords"""
     if resolution == 'beat':
         num_anchords = 4
     elif resolution == 'quater':
         num_anchords = 16
-    chromas = {
-        #           1     2     3     4  5     6     7
-        'maj':     [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0],
-        'min':     [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
-        'aug':     [1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0],
-        'dim':     [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 0, 0],
-        '7':       [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0],
-        'maj7':    [1, 0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1],
-        'min7':    [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 1, 0],
-        'minmaj7': [1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1],
-        'dim7':    [1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0, 0],
-        'hdim7':   [1, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0],
-    }
-    distr2quality = {'(4, 3)': 'maj/0', 
-                        '(3, 5)': 'maj/1', 
-                        '(5, 4)': 'maj/2', 
-
-                        '(3, 4)': 'min/0', 
-                        '(4, 5)': 'min/1', 
-                        '(5, 3)': 'min/2',
-
-                        '(4, 4)': 'aug/0',
-                        
-                        '(3, 3)': 'dim/0',
-                        '(3, 6)': 'dim/1',
-                        '(6, 3)': 'dim/2',
-
-                        '(4, 3, 3)': '7/0',
-                        '(3, 3, 2)': '7/1',
-                        '(3, 2, 4)': '7/2',
-                        '(2, 4, 3)': '7/3',
-
-                        '(4, 3, 4)': 'maj7/0',
-                        '(3, 4, 1)': 'maj7/1',
-                        '(4, 1, 4)': 'maj7/2',
-                        '(1, 4, 3)': 'maj7/3',
-
-                        '(3, 4, 3)': 'min7/0',
-                        '(4, 3, 2)': 'min7/1',
-                        '(3, 2, 3)': 'min7/2',
-                        '(2, 3, 4)': 'min7/3',
-
-                        '(3, 4, 4)': 'minmaj7/0',
-                        '(4, 4, 1)': 'minmaj7/1',
-                        '(4, 1, 3)': 'minmaj7/2',
-                        '(1, 3, 4)': 'minmaj7/3',
-
-                        '(3, 3, 3)': 'dim7/0',
-
-                        '(3, 3, 4)': 'hdim7/0',
-                        '(3, 4, 2)': 'hdim7/1',
-                        '(4, 2, 3)': 'hdim7/2',
-                        '(2, 3, 3)': 'hdim7/3',
-                        }
+    
     NC = [-1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1]
     last_time = 0
     chord_set = []
-    chord_time = [0.0, 0.0]
+    chord_time = [[0.0], [0.0]]
     chordsRecord = []
     for note in chord_track.notes:
         if len(chord_set) == 0:
             chord_set.append(note.pitch)
-            chord_time[0] = note.start
-            chord_time[1] = note.end
+            chord_time[0] = [note.start]
+            chord_time[1] = [note.end]
         else:
-            if note.start == chord_time[0] and note.end == chord_time[1]:
+            if (abs(note.start - np.mean(chord_time[0])) < tolerence) and (abs(note.end - np.mean(chord_time[1])) < tolerence):
                 chord_set.append(note.pitch)
+                chord_time[0].append(note.start)
+                chord_time[1].append(note.end)
             else:
-                if last_time < chord_time[0]:
-                    chordsRecord.append({"start":last_time,"end": chord_time[0], "chord" : NC})
+                if last_time < np.mean(chord_time[0]):
+                    chordsRecord.append({"start":last_time,"end": np.mean(chord_time[0]), "chord" : NC})
                 chord_set.sort()
-                assert(len(chord_set) == 3 or len(chord_set) == 4)
-                if len(chord_set) == 3:
-                    quality = distr2quality[str(((chord_set[1]-chord_set[0]), (chord_set[2]-chord_set[1])))]
-                elif len(chord_set) == 4:
-                    quality = distr2quality[str(((chord_set[1]-chord_set[0]), (chord_set[2]-chord_set[1]), (chord_set[3]-chord_set[2])))]
-                root = chord_set[-int(quality.split('/')[-1])] % 12
-                chroma = chromas[quality.split('/')[0]]
-                chroma = chroma[-root:] + chroma[:-root]
-                bass = (chord_set[0]%12-root) % 12
-                
+                chroma = copy.copy(NC)
+                for idx in chord_set:
+                    chroma[idx % 12 + 1] = 1
+                chroma[0] = chord_set[0] % 12
+                chroma[-1] = 0
+        
                 #concatenate
-                chordsRecord.append({"start": chord_time[0],"end": chord_time[1],"chord": [root]+chroma+[bass]})
-                last_time = chord_time[1]
+                chordsRecord.append({"start": np.mean(chord_time[0]),"end": np.mean(chord_time[1]),"chord": chroma})
+                last_time = np.mean(chord_time[1])
                 chord_set = []
                 chord_set.append(note.pitch)
-                chord_time[0] = note.start
-                chord_time[1] = note.end 
+                chord_time[0] = [note.start]
+                chord_time[1] = [note.end]
     if len(chord_set) > 0:
-        if last_time < chord_time[0]:
-            chordsRecord.append({"start":last_time ,"end": chord_time[0], "chord" : NC})
-        chord_set.sort()
-        assert(len(chord_set) == 3 or len(chord_set) == 4)
-        if len(chord_set) == 3:
-            quality = distr2quality[str(((chord_set[1]-chord_set[0]), (chord_set[2]-chord_set[1])))]
-        elif len(chord_set) == 4:
-            quality = distr2quality[str(((chord_set[1]-chord_set[0]), (chord_set[2]-chord_set[1]), (chord_set[3]-chord_set[2])))]
-        root = chord_set[-int(quality.split('/')[-1])] % 12
-        chroma = chromas[quality.split('/')[0]]
-        chroma = chroma[-root:] + chroma[:-root]
-        bass = (chord_set[0] % 12 - root) % 12
-        chordsRecord.append({"start": chord_time[0],"end": chord_time[1],"chord": [root]+chroma+[bass]})
-        last_time = chord_time[1]
+        if last_time < np.mean(chord_time[0]):
+            chordsRecord.append({"start":last_time ,"end": np.mean(chord_time[0]), "chord" : NC})
+        #chord_set.sort()
+        chroma = copy.copy(NC)
+        for idx in chord_set:
+            chroma[idx % 12 + 1] = 1
+        chroma[0] = chord_set[0] % 12
+        chroma[-1] = 0
+        chordsRecord.append({"start": np.mean(chord_time[0]),"end": np.mean(chord_time[1]),"chord": chroma})
+        last_time = np.mean(chord_time[1])
     ChordTable = []
     anchor = 0
     chord = chordsRecord[anchor]
@@ -221,7 +163,7 @@ def chord_data2matrix(chord_track, downbeats, resolution='beat', chord_expand=Tr
 
 def chord_matrix2data(chordMatrix, tempo=120, start_time=0.0, get_list=False):
     CHORD_SIZE = 12
-    cl = Chord_Loader("Seven")
+    #cl = Chord_Loader("Seven")
     if chordMatrix.shape[-1] == CHORD_SIZE:
         pass
     elif chordMatrix.shape[-1] == 14:
@@ -236,8 +178,7 @@ def chord_matrix2data(chordMatrix, tempo=120, start_time=0.0, get_list=False):
             chordMatrix = chordMatrix[:, :, 12: -12]
     chordSequence = []
     for i in range(chordMatrix.shape[0]):
-        chordset = [idx for idx in range(CHORD_SIZE) if chordMatrix[i][idx] == 1]
-        chordSequence.append(cl.note2name(chordset))
+        chordSequence.append(''.join([str(int(j)) for j in chordMatrix[i]]))
     minStep = 60 / tempo / 4    #16th quantization
     chord_notes = []
     onset_or_rest = [0]
@@ -245,15 +186,16 @@ def chord_matrix2data(chordMatrix, tempo=120, start_time=0.0, get_list=False):
     onset_or_rest = onset_or_rest + onset_or_rest_
     onset_or_rest.append(len(chordSequence))
     for idx, onset in enumerate(onset_or_rest[:-1]):
-        if chordSequence[onset] == 'NC':
-            continue
-        else:
-            chordset = cl.name2note(chordSequence[onset])
-            if chordset == None:
-                continue
-            start = onset * minStep
-            end = onset_or_rest[idx+1] * minStep
-            for note in chordset:
+        #if chordSequence[onset] == '000000000000':
+        #    continue
+        #else:
+        chordset = [int(i) for i in chordSequence[onset]]
+        #if chordset == None:
+        #    continue
+        start = onset * minStep
+        end = onset_or_rest[idx+1] * minStep
+        for note, value in enumerate(chordset):
+            if value == 1:
                 noteRecon = pyd.Note(velocity=100, pitch=note+4*12, start=start_time+start, end=start_time+end)
                 chord_notes.append(noteRecon)
     if get_list:
@@ -304,7 +246,7 @@ def accompany_matrix2data(pr_matrix, tempo=120, start_time=0.0, get_list=False):
 
 
 if __name__ == '__main__':
-    midi = pyd.PrettyMIDI('C:/Users/lenovo/Desktop/accomontage code/ECNU_leadsheet.mid')
+    midi = pyd.PrettyMIDI('./demo/demo lead sheets/ECNU University Song.mid')
     melody = midi.instruments[0]
     chord = midi.instruments[1]
     downbeats = midi.get_downbeats()
@@ -320,7 +262,7 @@ if __name__ == '__main__':
     chord_recon = chord_matrix2data(chordTable)
     midi.instruments[0] = melody_recon
     midi.instruments[1] = chord_recon
-    midi.write('C:/Users/lenovo/Desktop/accomontage code/test_recon.mid')
+    midi.write('C:/Users/zhaoj/Desktop/test_recon.mid')
 
 
     """   midi = pyd.PrettyMIDI('C:/Users/lenovo/Desktop/masaiqu.mid')

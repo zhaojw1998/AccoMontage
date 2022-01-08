@@ -33,8 +33,8 @@ args={
     "n_epochs": 100,
     "lr": 1e-3,
     "decay": 0.99991,
-    "Linux_log_save": "./demo_generate/log",
-    "log_save": "./demo_generate/log",
+    "Linux_log_save": "./demo/demo_generate/log",
+    "log_save": "./demo/demo_generate/log",
 }
 # 10个epoch contrastive optimizer稳定
 
