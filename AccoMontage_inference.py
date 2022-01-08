@@ -29,7 +29,7 @@ if __name__ == '__main__':
             -- The number of upbeats in the  pickup bar (can be float). If no upbeat, specify 0.
     Optional:
         SPOTLIGHT
-            -- a list of names of your prefered reference songs. See all 1001 supported reference songs (Chinese POP) at ./data files/POP909 hierarchical-structure-analysis/index.xlsx.
+            -- a list of names of your prefered reference songs. See all 860 supported reference songs (Chinese POP) at ./data files/POP909 4bin quntization/four_beat_song_index.
         PREFILTER
             -- a tuple (a, b) controlling rhythmic patters. a, b can be integers in [0, 4], each controlling horrizontal rhythmic density and vertical voice number. Ther higher number, the denser rhythms.
 

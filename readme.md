@@ -16,7 +16,7 @@ To inference with AccoMontage and generate for your own music, run `AccoMontage_
     -   `SEGMENTATION` -- phrase annotation (string) of the MIDI file. For example, for an AABB song with 8 bars for each phrase, the annotation should be in the format `'A8A8B8B8\n'`. Note that by default we only support the transition among 4-bar, 6-bar, and 8-bar phrases
     -   `NOTE_SHIFT` -- The number of upbeats in the  pickup bar (can be float). If no upbeat, specify 0.
 -   Optional:
-    -   `SPOTLIGHT` -- a list of names of your prefered reference songs. See all 1001 supported reference songs (Chinese POP) at `./data files/POP909 hierarchical-structure-analysis/index.xlsx`.
+    -   `SPOTLIGHT` -- a list of names of your prefered reference songs. See all 860 supported reference songs (Chinese POP) at `./data files/POP909 4bin quntization/four_beat_song_index`.
     -   `PREFILTER` -- a tuple (a, b) controlling rhythmic patters. a, b can be integers in [0, 4], each controlling horrizontal rhythmic density and vertical voice number. Ther higher number, the denser rhythms.
 
 
