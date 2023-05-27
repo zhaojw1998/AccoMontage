@@ -1,14 +1,9 @@
-import pretty_midi as pyd 
-import numpy as np 
-import pandas as pd 
-import time
-import datetime
-
-from AccoMontage import set_premises, load_lead_sheet, phrase_selection, re_harmonization
-
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
-from tqdm import tqdm
+import datetime
+from AccoMontage import set_premises, load_lead_sheet, phrase_selection, re_harmonization
+import warnings
+warnings.filterwarnings("ignore")
 
 
 

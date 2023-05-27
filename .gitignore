@@ -1,6 +1,6 @@
 .vscode/
-data files/
-nottingham_Dual-track-Direct/
+checkpoints/
+Nottingham/
 demo_generate/
 readme.txt
 *.pt

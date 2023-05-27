@@ -1,41 +1,30 @@
-import pretty_midi as pyd 
-import numpy as np
+
 import os
-from torch.utils.tensorboard.summary import text
-from tqdm import tqdm
 import time
-import platform
 import torch
 from torch.utils.tensorboard import SummaryWriter
 from torch.optim.lr_scheduler import ExponentialLR
 from torch import optim
 
-from transition_model_data_loader import two_bar_dataset
+from transition_model_data_loader import dataset
 
 import sys
-sys.path.append('./models')
-from two_bar_contrastive_model import contrastive_model
-from ptvae import TextureEncoder
+sys.path.append('AccoMontage')
+from models import contrastive_model, TextureEncoder
 
 args={
-    "Linux_batch_size": 8,
     "batch_size": 8,
-    "Linux_data_path": "./data files/song_data.npz",
-    "data_path": "./data files/song_data.npz",
-    'Linux_weight_path': "./data files/model_master_final.pt",
-    'weight_path': "./data files/model_master_final.pt",
-    "Linux_embed_size": 256,
+    "data_path": "checkpoints/song_data.npz",
+    'weight_path': "checkpoints/model_master_final.pt",
     "embed_size": 256,
-    "Linux_hidden_dim": 1024,
     "hidden_dim": 1024,
     "time_step": 32,
     "n_epochs": 100,
     "lr": 1e-3,
     "decay": 0.99991,
-    "Linux_log_save": "./demo/demo_generate/log",
-    "log_save": "./demo/demo_generate/log",
+    "log_save": "demo/demo_generate/log",
 }
-# 10个epoch contrastive optimizer稳定
+# contrastive optimizer stabalizes at around 10 epochs
 
 class MinExponentialLR(ExponentialLR):
     def __init__(self, optimizer, gamma, minimum, last_epoch=-1):
@@ -119,14 +108,9 @@ def val(contrastive_model, texture_model, dataset, writer, val_loss_recoder):
         step += 1
     writer.add_scalar('val/loss_total-epoch', loss.avg, n_epoch)
 
-if platform.system() == 'Linux':
-    embed_size = args["Linux_embed_size"]
-    hidden_dim = args["Linux_hidden_dim"]
-    weight_path = args["Linux_weight_path"]
-else:
-    embed_size = args["embed_size"]
-    hidden_dim = args["hidden_dim"]
-    weight_path = args["weight_path"]
+embed_size = args["embed_size"]
+hidden_dim = args["hidden_dim"]
+weight_path = args["weight_path"]
 
 contrastive_model = contrastive_model(emb_size=embed_size, hidden_dim=hidden_dim).cuda()
 
@@ -145,14 +129,9 @@ texture_model.cuda()
 run_time = time.asctime(time.localtime(time.time())).replace(':', '-')
 logdir = 'log/' + run_time[4:]
 save_dir = 'params/' + run_time[4:]
-if platform.system() == 'Linux':
-    logdir = os.path.join(args["Linux_log_save"], logdir)
-    save_dir = os.path.join(args["Linux_log_save"], save_dir)
-    batch_size = args['Linux_batch_size']
-else:
-    logdir = os.path.join(args["log_save"], logdir)
-    save_dir = os.path.join(args["log_save"], save_dir)
-    batch_size = args['batch_size']
+logdir = os.path.join(args["log_save"], logdir)
+save_dir = os.path.join(args["log_save"], save_dir)
+batch_size = args['batch_size']
 if not os.path.exists(logdir):
     os.makedirs(logdir)
 if not os.path.exists(save_dir):
@@ -161,7 +140,7 @@ if not os.path.exists(save_dir):
 writer = SummaryWriter(logdir)
 training_loss_recoder = AverageMeter()
 val_loss_recoder = AverageMeter()
-dataset = two_bar_dataset(args['data_path'], batch_size, args['time_step'])
+dataset = dataset(args['data_path'], batch_size, args['time_step'])
 dataset.make_batch(batch_size)
 
 optimizer = optim.Adam(contrastive_model.parameters(), lr=args['lr'])

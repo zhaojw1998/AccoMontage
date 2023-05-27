@@ -3,7 +3,7 @@ from tqdm import tqdm
 import random
 import platform
 
-class two_bar_dataset(object):
+class dataset(object):
     def __init__(self, data_path='./', batch_size=8, time_res=32):
         song_data = np.load(data_path, allow_pickle=True)['acc']
         self.batch_size = batch_size
@@ -67,9 +67,6 @@ class two_bar_dataset(object):
         self.num_epoch += 1
 
         for i in tqdm(range(0, len(self.train_pairs)-batch_size, batch_size)):
-            if platform.system() == 'Windows':
-                if not (i//32) % 800 == 0:
-                    continue
             batch_pair = np.array(self.train_pairs[i: i+batch_size])
             random_items = np.array(random.sample(self.snippet_pool, batch_size*4)).reshape((batch_size, 4, 32, 128))
             one_batch = np.concatenate((batch_pair, random_items), axis=1)
@@ -83,9 +80,6 @@ class two_bar_dataset(object):
             self.train_batch.append(one_batch)
 
         for i in tqdm(range(0, len(self.val_pairs)-batch_size, batch_size)):
-            #if platform.system() == 'Windows':
-            #    if not (i//32) % 80 == 0:
-            #        continue
             batch_pair = np.array(self.val_pairs[i: i+batch_size])
             random_items = np.array(random.sample(self.snippet_pool, batch_size*4)).reshape((batch_size, 4, 32, 128))
             one_batch = np.concatenate((batch_pair, random_items), axis=1)
@@ -129,22 +123,21 @@ if __name__ == '__main__':
     import torch
     torch.cuda.current_device()
     import sys
-    sys.path.append('./models')
-    from two_bar_contrastive_model import contrastive_model
-    from ptvae import TextureEncoder
+    sys.path.append('AccoMontage')
+    from models import contrastive_model, TextureEncoder
 
-    data_Set = two_bar_dataset('./song_data.npz', 1, 32)
+    data_Set = dataset('checkpoints/song_data.npz', 1, 32)
     data_Set.make_batch(1)
     init_epoch = 0
 
     texture_model = TextureEncoder(emb_size=256, hidden_dim=1024, z_dim=256, num_channel=10, for_contrastive=True)
-    checkpoint = torch.load("C:/Users/lenovo/Desktop/20210504param/texture_model_params099.pt")
+    checkpoint = torch.load("checkpoints/texture_model_params049.pt")
     texture_model.load_state_dict(checkpoint)
     texture_model.cuda()
     texture_model.eval()
 
     contras_model = contrastive_model(emb_size=256, hidden_dim=1024)   
-    contras_model.load_state_dict(torch.load('C:/Users/lenovo/Desktop/20210504param/contrastive_model_params099.pt'))
+    contras_model.load_state_dict(torch.load('checkpoints/contrastive_model_params049.pt'))
     contras_model.cuda()
     contras_model.eval()
     

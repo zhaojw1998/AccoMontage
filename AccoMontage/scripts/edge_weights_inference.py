@@ -1,16 +1,14 @@
-import pretty_midi as pyd 
 import numpy as np 
 import os
 from tqdm import tqdm
-import pandas as pd 
-import platform
-import sys
 import torch
 torch.cuda.current_device()
 
-from models import DisentangleVAE
-from models import PtvaeDecoder, TextureEncoder
-from models import contrastive_model
+import sys
+sys.path.append('AccoMontage')
+from models import TextureEncoder, contrastive_model
+import warnings
+warnings.filterwarnings("ignore")
 
 
 def find_by_length(melody_data, acc_data, chord_data, length):
@@ -30,6 +28,7 @@ def find_by_length(melody_data, acc_data, chord_data, length):
             chord = chord_data[song_idx][phrase_idx]
             chord_record.append(chord)
     return np.array(melody_record), np.array(acc_record), np.array(chord_record)
+
 
 def contrastive_match(left, rights, texture_model, contras_model, num_candidates):
     #left: 1 * time * 128
@@ -92,6 +91,7 @@ def contrastive_match(left, rights, texture_model, contras_model, num_candidates
         #print(result, argmax[:num_candidates])
         return consequence, argmax[:num_candidates]
 
+
 def inference_edge_weights(contras_model, texture_model, length, last_length, melody_data, acc_data, chord_data, acc_pool):
     if not length in acc_pool:
         (mel, acc, chord) = find_by_length(melody_data, acc_data, chord_data, length)
@@ -100,54 +100,42 @@ def inference_edge_weights(contras_model, texture_model, length, last_length, me
         (mel, acc, chord) = find_by_length(melody_data, acc_data, chord_data, last_length)
         acc_pool[last_length] = (mel, acc, chord)
 
-    melody_set = acc_pool[length][0]
+   # melody_set = acc_pool[length][0]
     acc_set = acc_pool[length][1]
-    chord_set = acc_pool[length][2]
-
-    weight_key = 'l' + str(last_length) + str(length)
+    #chord_set = acc_pool[length][2]
 
     edge_dict = []
     last_acc_set = acc_pool[last_length][1]
     for item in tqdm(last_acc_set):
+        if len(item) < 32:
+            item = np.pad(item, ((32-len(item), 0), (0, 0)))
+        if acc_set.shape[1] < 32:
+            acc_set = np.pad(acc_set, ((0, 0), (0, 32-acc_set.shape[1]), (0, 0)))
         contras_values = contrastive_match(item[np.newaxis, -32:, :], acc_set[:, :32, :], texture_model, contras_model, -1)
         edge_dict.append(contras_values)
     return np.array(edge_dict)
     
 
-data = np.load('./data files/phrase_data0714.npz', allow_pickle=True)
+data = np.load('checkpoints/phrase_data.npz', allow_pickle=True)
 melody = data['melody']
 acc = data['acc']
 chord = data['chord']
 
 texture_model = TextureEncoder(emb_size=256, hidden_dim=1024, z_dim=256, num_channel=10, for_contrastive=True)
-if platform.system() == 'Linux':
-    checkpoint = torch.load("/gpfsnyu/scratch/jz4807/model-weights/contrastive_model/params/May  5 00-21-48 2021/texture_model_params049.pt")
-else:
-    checkpoint = torch.load("./data files/texture_model_params049.pt")
+checkpoint = torch.load("checkpoints/texture_model_params049.pt")
 texture_model.load_state_dict(checkpoint)
 texture_model.cuda()
 
 contras_model = contrastive_model(emb_size=256, hidden_dim=1024)
-if platform.system() == 'Linux':
-    contras_model.load_state_dict(torch.load('/gpfsnyu/scratch/jz4807/model-weights/contrastive_model/params/May  5 00-21-48 2021/contrastive_model_params049.pt'))
-else:    
-    contras_model.load_state_dict(torch.load('./data files/contrastive_model_params049.pt'))
+contras_model.load_state_dict(torch.load('checkpoints/contrastive_model_params049.pt'))
 contras_model.cuda()
 
-#length_check = [(8, 8), (4, 4), (8, 4), (4, 8)]
-length_check = [(8, 8), (4, 4), (8, 4), (4, 8), (6, 6), (6, 8), (6, 4), (4, 6), (8, 6)]
-acc_pool = {}
-numpy = []
-for lengths in length_check:
-    length = lengths[1]
-    last_length = lengths[0]
-    edge_weights = inference_edge_weights(contras_model, texture_model, length, last_length, melody, acc, chord, acc_pool)
-    
-    if not os.path.exists('./tmp'):
-        os.makedirs('./tmp')
-    np.savez_compressed('./tmp/edge_weights' + '_' + str(last_length) + str(length) + '.npz', edge_weights)
-    #numpy.append(np.load(file, allow_pickle=True)['arr_0'])
-
-    numpy.append(edge_weights)
-
-np.savez_compressed('./data files/edge_weights_0714.npz', l44=numpy[0], l46=numpy[1], l48=numpy[2], l64=numpy[3], l66=numpy[4], l68=numpy[5], l84=numpy[6], l86=numpy[7], l88=numpy[8])
+for l1 in range(1, 17):
+    for l2 in range(1, 17):
+        length = l2
+        last_length = l1
+        edge_weights = inference_edge_weights(contras_model, texture_model, length, last_length, melody, acc, chord, {})
+        
+        if not os.path.exists('./tmp'):
+            os.makedirs('./tmp')
+        np.savez_compressed('./tmp/edge_weights' + '_' + str(last_length) + '_' + str(length) + '.npz', edge_weights)
