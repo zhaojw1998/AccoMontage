@@ -1,9 +1,10 @@
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"]="TRUE"
 import datetime
-from AccoMontage import set_premises, load_lead_sheet, phrase_selection, re_harmonization
+from AccoMontage import set_premises, load_lead_sheet, phrase_selection, re_harmonization, matrix2leadsheet
 import warnings
 warnings.filterwarnings("ignore")
+import sys
 
 
 
@@ -48,29 +49,33 @@ if __name__ == '__main__':
     #SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'AULD LANG SYNE.mid', 'A4B4C4B4A4B4C4B4\n', 0
     #SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'AULD LANG SYNE.mid', 'A8B8A8B8\n', 0
     #SONG_NAME, SEGMENTATION, NOTE_SHIFT = "Proudlocks's Variation.mid", 'A8A8B8B8\n', 1
-    #SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'ECNU University Song.mid', 'A8A8B8B8C8D8E4F6A8A8B8B8C8D8E4F6\n', 0
+    SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'ECNU University Song.mid', 'A8A8B8B8C8D8E4F6A8A8B8B8C8D8E4F6\n', 0
     SONG_ROOT='./demo/demo lead sheets'
 
 
-    SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'lead sheet.mid', 'A8B8A8B8\n', 1
-    SONG_ROOT='C:/Users/zhaoj/Desktop/for ids open house/Auld Lang Syne'
+    #SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'lead sheet.mid', 'A8B8A8B8\n', 1
+    #SONG_ROOT='C:/Users/zhaoj/Desktop/for ids open house/Auld Lang Syne'
 
 
-    SPOTLIGHT = []
+    SPOTLIGHT = [907]
     PREFILTER = (4, 2)
     
     #SONG_NAME, SEGMENTATION, NOTE_SHIFT = 'LetItBe.mid', 'i4A8B4A8B8C4A8B4A8B8B4C2\n', 0
     #SONG_ROOT='C:/Users/zhaoj/Desktop/for ids open house/Let It Be'
 
-    phrase_data_dir = './data files/phrase_data.npz'
-    edge_weights_dir = './data files/edge_weights.npz'
-    checkpoint_dir = './data files/model_master_final.pt'
-    pop909_meta_dir = './data files/pop909_quadraple_meters_index'
+    phrase_data_dir = 'checkpoints/phrase_data.npz'
+    edge_weights_dir = 'checkpoints/edge_weights.npz'
+    checkpoint_dir = 'checkpoints/model_master_final.pt'
+    pop909_meta_dir = 'checkpoints/pop909_quadraple_meters_index.xlsx'
 
     print('Loading reference data (texture donors) from POP909. This may takes several seconds of time ...')
     model, acc_pool, reference_check, params = pre_liminary = set_premises(phrase_data_dir, edge_weights_dir, checkpoint_dir, pop909_meta_dir)
 
-    lead_sheet, chord_roll, phrase_label = load_lead_sheet(SONG_ROOT, SONG_NAME, SEGMENTATION, NOTE_SHIFT)
+    lead_sheet, chord_roll, phrase_label = load_lead_sheet(SONG_ROOT, SONG_NAME, SEGMENTATION, NOTE_SHIFT, melody_track_ID=0)
+    assert len(lead_sheet)//16==sum([item[1] for item in phrase_label]), \
+            f'Mismatch in total bar numbers between the MIDI file and the phrase annotation. Detect {len(lead_sheet)//16} bars in MIDI and {sum([item[1] for item in phrase_label])} bars in the provided phrase annotation.'
+    #midi_recon = matrix2leadsheet(lead_sheet)
+    #midi_recon.write('test.mid')
 
     print(f'Phrase selection begins: {len(phrase_label)} phrases in total\
             \n\t Refer to {SPOTLIGHT} as much as possible\

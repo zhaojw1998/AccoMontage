@@ -35,14 +35,14 @@ def set_premises(phrase_data_dir, edge_weights_dir, checkpoint_dir, reference_me
     return model, acc_pool, reference_check, (edge_weights, texture_filter)
 
 
-def load_lead_sheet(SONG_ROOT, SONG_NAME, SEGMENTATION, NOTE_SHIFT):
-    melody_roll, chord_roll = cvt.leadsheet2matrix(os.path.join(SONG_ROOT, SONG_NAME), melody_track_ID=0)
+def load_lead_sheet(SONG_ROOT, SONG_NAME, SEGMENTATION, NOTE_SHIFT, melody_track_ID):
+    melody_roll, chord_roll = cvt.leadsheet2matrix(os.path.join(SONG_ROOT, SONG_NAME), melody_track_ID)
     assert(len(melody_roll == len(chord_roll)))
     if NOTE_SHIFT != 0:
         melody_roll = melody_roll[int(NOTE_SHIFT*4):, :]
         chord_roll = chord_roll[int(NOTE_SHIFT*4):, :]
-    if len(melody_roll) % 32 != 0:
-        pad_len = (len(melody_roll)//32+1)*32-len(melody_roll)
+    if len(melody_roll) % 16 != 0:
+        pad_len = (len(melody_roll)//16+1)*16-len(melody_roll)
         melody_roll = np.pad(melody_roll, ((0, pad_len), (0, 0)))
         melody_roll[-pad_len:, -1] = 1
         chord_roll = np.pad(chord_roll, ((0, pad_len), (0, 0)))
@@ -78,10 +78,10 @@ def phrase_selection(LEADSHEET, query_phrases, reference_check, acc_pool, edge_w
         phrase_len = phrase[1]
         song_ref = acc_pool[phrase_len][-1]
         idx_song = song_ref[path[idx_phrase][0]][0]
+        pop909_idx = reference_check.iloc[idx_song][0]
         song_name = reference_check.iloc[idx_song][1]
-        reference_set.append((idx_song, song_name))
-    print('Reference selected:', reference_set)
-    #print('Pitch Transpositon (Fit by Model):', shift)
+        reference_set.append(f'{idx_phrase}: {str(pop909_idx).zfill(3)}_{song_name}')
+    print('Reference pieces:', reference_set)
     return (path, shift)
 
 
@@ -157,7 +157,7 @@ def dp_search(query_phrases, seg_query, acc_pool, edge_weights, texture_filter=N
     record = []
 
     #Searching for phrase 2, 3, ...
-    for i in range(1, len(query_length)):
+    for i in tqdm(range(1, len(query_length))):
         mel, acc, chord, _, _, song_ref = acc_pool[query_length[i]]
         weight_key = f"l_{str(query_length[i-1]).zfill(2)}_{str(query_length[i]).zfill(2)}"
         contras_result = edge_weights[weight_key]
@@ -238,9 +238,8 @@ def re_harmonization(lead_sheet, chord_table, query_phrases, indices, shifts, mo
     phrase_mean_vel = []
     cc_roll = np.empty((0, 128))
     #retrive texture donor data of the corrresponding indices from the acc_pool
-    query_seg = [item[0] + str(item[1]) for item in query_phrases]  #['A8', 'A8', 'B8', 'B8']
     for i, idx in enumerate(indices):
-        length = int(query_seg[i][1:])
+        length = query_phrases[i][-2]
         shift = shifts[i]
         # notes
         acc_matrix = np.roll(acc_pool[length][1][idx[0]], shift, axis=-1)
@@ -258,6 +257,14 @@ def re_harmonization(lead_sheet, chord_table, query_phrases, indices, shifts, mo
         vel_roll[i][vel_roll[i] > 0] += (global_mean_vel - phrase_mean_vel[i])
     vel_roll = np.concatenate(vel_roll, axis=0)
     #re-harmonization
+    if len(acc_roll) % 32 != 0:
+        pad_len = (len(acc_roll)//32+1)*32 - len(acc_roll)
+        acc_roll = np.pad(acc_roll, ((0, pad_len), (0, 0)))
+        vel_roll = np.pad(vel_roll, ((0, pad_len), (0, 0)))
+        cc_roll = np.pad(cc_roll, ((0, pad_len), (0, 0)), mode='constant', constant_values=-1)
+        chord_table = np.pad(chord_table, ((0, pad_len//4), (0, 0)))
+        chord_table[-pad_len:, 0] = -1
+        chord_table[-pad_len:, -1] = -1
     acc_roll = acc_roll.reshape(-1, 32, 128)
     chord_table = chord_table.reshape(-1, 8, 36)
     acc_roll = torch.from_numpy(acc_roll).float().cuda()
@@ -295,6 +302,11 @@ def ref_spotlight(ref_name_list, reference_check):
     if ref_name_list is None:
         return None
     check_idx = []
+    #POP909 song_id
+    for name in ref_name_list:
+        line = reference_check[reference_check.song_id == name]
+        if not line.empty:
+            check_idx.append(line.index)#read by pd, neglect first row, index starts from 0.
     #song name
     for name in ref_name_list:
         line = reference_check[reference_check.name == name]
