@@ -35,8 +35,8 @@ def set_premises(phrase_data_dir, edge_weights_dir, checkpoint_dir, reference_me
     return model, acc_pool, reference_check, (edge_weights, texture_filter)
 
 
-def load_lead_sheet(SONG_ROOT, SONG_NAME, SEGMENTATION, NOTE_SHIFT, melody_track_ID):
-    melody_roll, chord_roll = cvt.leadsheet2matrix(os.path.join(SONG_ROOT, SONG_NAME), melody_track_ID)
+def load_lead_sheet(DEMO_ROOT, SONG_NAME, SEGMENTATION, NOTE_SHIFT, melody_track_ID):
+    melody_roll, chord_roll = cvt.leadsheet2matrix(os.path.join(DEMO_ROOT, SONG_NAME, 'lead sheet.mid'), melody_track_ID)
     assert(len(melody_roll == len(chord_roll)))
     if NOTE_SHIFT != 0:
         melody_roll = melody_roll[int(NOTE_SHIFT*4):, :]
@@ -52,17 +52,26 @@ def load_lead_sheet(SONG_ROOT, SONG_NAME, SEGMENTATION, NOTE_SHIFT, melody_track
     CHORD_TABLE = np.stack([cvt.expand_chord(chord) for chord in chord_roll[::4]], axis=0)
     LEADSHEET = np.concatenate((melody_roll, chord_roll[:, 1: -1]), axis=-1)    #T*142, quantized at 16th
     query_phrases = split_phrases(SEGMENTATION) #[('A', 8, 0), ('A', 8, 8), ('B', 8, 16), ('B', 8, 24)]
+
+    assert len(LEADSHEET)//16 >= sum([item[1] for item in query_phrases]), f'Mismatch in total bar numbers between the MIDI file and the phrase annotation. Detect {len(LEADSHEET)//16} bars in MIDI and {sum([item[1] for item in query_phrases])} bars in the provided phrase annotation.'
+
+    if len(LEADSHEET)//16 > sum([item[1] for item in query_phrases]):
+        LEADSHEET = LEADSHEET[:sum([item[1] for item in query_phrases])*16]
+        CHORD_TABLE = CHORD_TABLE[:sum([item[1] for item in query_phrases])*4]
+    
     return LEADSHEET, CHORD_TABLE, query_phrases
 
 
-def phrase_selection(LEADSHEET, query_phrases, reference_check, acc_pool, edge_weights, texture_filter=None, PREFILTER=None, SPOTLIGHT=None):
+def phrase_selection(LEADSHEET, query_phrases, reference_check, acc_pool, edge_weights, texture_filter=None, PREFILTER=None, SPOTLIGHT=None, randomness=0):
     melody_queries = []
     for item in query_phrases:
         start_bar = item[-1]
         length = item[-2]
         segment = LEADSHEET[start_bar*16: (start_bar+length)*16]
         melody_queries.append(segment)  #melody queries: list of T16*142, segmented by phrases
-
+    print(f'Phrase selection begins: {len(query_phrases)} phrases in total. \n\t Set note density filter: {PREFILTER}.')
+    if SPOTLIGHT is not None:
+        print(f'\t Refer to {SPOTLIGHT} as much as possible')
     phrase_indice, chord_shift = dp_search(melody_queries, 
                                             query_phrases,
                                             acc_pool, 

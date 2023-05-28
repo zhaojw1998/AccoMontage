@@ -1,11 +1,6 @@
-.vscode/
 checkpoints/
 Nottingham/
-demo_generate/
+demo/ECNU Remix/
 readme.txt
-*.pt
-*.npy
-*.npz
-*.mscz
 *.pyc
 
