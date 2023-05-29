@@ -8,9 +8,10 @@ from .models import DisentangleVAE
 from . import format_converter as cvt
 from scipy.interpolate import interp1d
 from tqdm import tqdm
+import gc
 
 
-def set_premises(phrase_data_dir, edge_weights_dir, checkpoint_dir, reference_meta_dir):
+def set_premises(phrase_data_dir, edge_weights_dir, checkpoint_dir, reference_meta_dir, phrase_len=range(1, 7)):
     #load POP909 phrase data
     data = np.load(phrase_data_dir, allow_pickle=True)
     MELODY = data['melody']
@@ -19,9 +20,11 @@ def set_premises(phrase_data_dir, edge_weights_dir, checkpoint_dir, reference_me
     VELOCITY = data['velocity']
     CC = data['cc']
     acc_pool = {}
-    for phrase_len in tqdm(range(1, 17)):
-        (_mel, _acc, _chord, _vel, _cc, _song_reference) = find_by_length(MELODY, ACC, CHORD, VELOCITY, CC, phrase_len)
-        acc_pool[phrase_len] = (_mel, _acc, _chord, _vel, _cc, _song_reference)
+    for length in tqdm(phrase_len):
+        (_mel, _acc, _chord, _vel, _cc, _song_reference) = find_by_length(MELODY, ACC, CHORD, VELOCITY, CC, length)
+        acc_pool[length] = (_mel, _acc, _chord, _vel, _cc, _song_reference)
+    del data, MELODY, ACC, CHORD, VELOCITY, CC
+    gc.collect()
     texture_filter = get_texture_filter(acc_pool)   
     #load pre-computed transition score
     edge_weights=np.load(edge_weights_dir, allow_pickle=True)
@@ -32,7 +35,6 @@ def set_premises(phrase_data_dir, edge_weights_dir, checkpoint_dir, reference_me
     model.eval()
     #load pop909 meta
     reference_check = pd.read_excel(reference_meta_dir)
-    del data, MELODY, ACC, CHORD, VELOCITY, CC
     return model, acc_pool, reference_check, (edge_weights, texture_filter)
 
 
