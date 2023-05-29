@@ -11,7 +11,7 @@ from tqdm import tqdm
 import gc
 
 
-def set_premises(phrase_data_dir, edge_weights_dir, checkpoint_dir, reference_meta_dir, phrase_len=range(1, 7)):
+def set_premises(phrase_data_dir, edge_weights_dir, checkpoint_dir, reference_meta_dir, phrase_len=range(1, 17)):
     #load POP909 phrase data
     data = np.load(phrase_data_dir, allow_pickle=True)
     MELODY = data['melody']
