@@ -1,59 +1,51 @@
 # AccoMontage
+<a href="https://colab.research.google.com/drive/1F4saDkh45KNxePD5yEcje61b0F09buDW?usp=sharing)" rel="nofollow"><img src="https://camo.githubusercontent.com/84f0493939e0c4de4e6dbe113251b4bfb5353e57134ffd9fcab6b8714514d4d1/68747470733a2f2f636f6c61622e72657365617263682e676f6f676c652e636f6d2f6173736574732f636f6c61622d62616467652e737667" alt="Open In Colab" data-canonical-src="https://colab.research.google.com/assets/colab-badge.svg" style="max-width: 100%;"></a>
 
-## Introduction
-AccoMontage is an accompaniment arrangement system. It introduces a novel hybrid pathway, in which rule-based optimization and deep learning are both leveraged to complement each other for high-quality generation. Our paper [*AccoMontage: Accompaniment Arrangement via Phrase Selection and Style Transfer*](https://arxiv.org/abs/2108.11213) is accepted by [ISMIR 2021](https://ismir2021.ismir.net/). This repository stores codes and demos of our work.
+AccoMontage is a piano accompaniment arrangement system. It introduces a novel hybrid pathway, in which rule-based optimization (for high-level structure) and learning-based style transfer (for fien-grained conherency) are both leveraged to complement each other for high-quality generation. Our paper [*AccoMontage: Accompaniment Arrangement via Phrase Selection and Style Transfer*](https://arxiv.org/abs/2108.11213) is accepted by [ISMIR 2021](https://ismir2021.ismir.net/). This repository stores codes and demos of our work.
 
-## Data and Weights Download
-Data and weights required to reproduce our work can be downloaded [here](https://drive.google.com/drive/folders/14sR11NR7jDPMLtCAYbuK5KwLdc7jSKZv?usp=sharing). The files should be put to `./data files`.
-
-For the sake of fast accompaniment arrangement, our model does not run the deep learning inference evrey time, but loads pre-inferenced transition matrix. This pre-inferenced file currently supports transition among 4, 6, and 8-bar phrases. `./util_tools/edge_weights_inference.py` can be used to compute transition matrix for other situations.
+## New Features
+AccoMontage now supports a few new features as follows:
+* Generation with **MIDI velocity** and **pedal control messages**.
+* Transitions among **phrases of any length** (1-bar, 2-bar, ..., 16-bar).
+* Input of general MIDI with **arbituary tracks** (besides melody) and arbituarily **complex chords** (e.g., 9th chords). Yet, we still quantize the chord sequence at 1-beat unit. If the melody is not on the first track, then the melody track index is also requested.
+* Whole pieces arrangement with **intro**, **interlude**, and **outro**.
+* **Spotlight** certain reference pieces from [POP909 dataset](https://github.com/music-x-lab/POP909-Dataset) as the donor of piano textures. Currently supported spotlight options include POP909 song index (e.g., 905), song name (e.g., '小城故事'), and/or artist name (e.g., '邓丽君'). For complete supported options, refer to the checktable `./checkpoints/pop909_quadraple_meters_index.xlsx`.
 
 ## Run
-To inference with AccoMontage and generate for your own music, run `AccoMontage_inference.py`. Line 44~57 should be configured by yourself. Concretely, your should specify:
-
--   Required:
-    -   `SONG_NAME` & `SONG_ROOT` -- directory to a MIDI lead sheet file. This MIDI file should consists of two tracks, each containing melody (monophonic) and chord (polyphonic). Now complex chords (9th, 11th, and more) is supported.
-    -   `SEGMENTATION` -- phrase annotation (string) of the MIDI file. For example, for an AABB song with 8 bars for each phrase, the annotation should be in the format `'A8A8B8B8\n'`. Note that by default we only support the transition among 4-bar, 6-bar, and 8-bar phrases
-    -   `NOTE_SHIFT` -- The number of upbeats in the  pickup bar (can be float). If no upbeat, specify 0.
--   Optional:
-    -   `SPOTLIGHT` -- a list of names of your prefered reference songs. See all 860 supported reference songs (Chinese POP) at `./data files/POP909 4bin quntization/four_beat_song_index`.
-    -   `PREFILTER` -- a tuple (a, b) controlling rhythmic patters. a, b can be integers in [0, 4], each controlling horrizontal rhythmic density and vertical voice number. Ther higher number, the denser rhythms.
-
+* Data and checkpoints required to run AccoMontage can be downloaded [here](https://drive.google.com/file/d/1zQ5xds8oeeAlnn_PK5e0PWNKyM7unUFO/view?usp=sharing) (updated May 29, 2023). After extraction, you should have a `./checkpoints/` folder with relevant pt and npz files inside. 
+* Our code is now arranged in a portable manner. You can follow the guidance in [`./AccoMontage_inference.ipynb`](./AccoMontage_inference.ipynb) and run AccoMontage.
+* Alternatively, AccoMontage is now accessible on [Google Colab](https://colab.research.google.com/drive/1F4saDkh45KNxePD5yEcje61b0F09buDW?usp=sharing), where you can quickly test it online. 
 
 ## Demos
-Generated demos are listed in `./demo/demo generate upload`. The original query lead sheets are listed in `./demo/demo lead sheets`. AccoMontage is applied as the backbones to rearrange the Alma Mater Music of East China Normal University (ECNU). Performance demos can be accessed [here](https://zhaojw1998.github.io/accomontage_demo).
-
-## New Feature: Reference Spotlight
-This new feature allows you to specify which reference song(s) (from [POP909](https://github.com/music-x-lab/POP909-Dataset)) you would like to use and apply its/their texture to the query lead sheet.
+Generated demos are listed in `./demo`. AccoMontage was applied as the backbones to rearrange the Alma Mater Music of East China Normal University (ECNU). Performance demos can be accessed [here](https://zhaojw1998.github.io/accomontage_demo).
 
 ## Acknowledgement
-Thanks to Prof. Gus Xia, Yixiao Zhang, Liwei Lin, Junyan Jiang, Ziyu Wang, and Shuqi Dai for your generous help to this work. Thanks to all my friends at NYUSH Music X Lab for your encouragement and companion. The following repositories are referred to by this work:
+Thanks to Prof. Gus Xia, Yixiao Zhang, Liwei Lin, Junyan Jiang, Ziyu Wang, and Shuqi Dai for their generous help to this work. Thanks to all NYUSH Music X Lab citizens for their encouragement and companion. The following repositories are referred to by this work:
 
 - https://github.com/ZZWaang/polyphonic-chord-texture-disentanglement
 - https://github.com/ZZWaang/PianoTree-VAE 
 - https://github.com/Dsqvival/hierarchical-structure-analysis
+- https://github.com/music-x-lab/ISMIR2019-Large-Vocabulary-Chord-Recognition
 - https://github.com/buggyyang/Deep-Music-Analogy-Demos
 
 
-## Reference
-If you find this code useful, please consider citing:
+## Cite Our Work
+If you find our paper and this repository useful, please consider citing our work:
 
 <div class="snippet-clipboard-content position-relative overflow-auto"><pre><code>@inproceedings{zhao2021accomontage,
   author    = {Jingwei Zhao and Gus Xia},
   title     = {AccoMontage: Accompaniment Arrangement via Phrase Selection and Style Transfer},
-  booktitle = {Proceedings of the 22nd International Society for Music Information Retrieval Conference, {ISMIR} 2021, Online, November 7-12, 2021},
+  booktitle = {Proceedings of the 22nd International Society for Music Information Retrieval Conference ({ISMIR} 2021)},
   pages     = {833--840},
   year      = {2021},
-  url       = {https://archives.ismir.net/ismir2021/paper/000104.pdf}
 }
 </code></pre><div class="zeroclipboard-container position-absolute right-0 top-0">
     <clipboard-copy aria-label="Copy" class="ClipboardButton btn js-clipboard-copy m-2 p-0 tooltipped-no-delay" data-copy-feedback="Copied!" data-tooltip-direction="w" value="@inproceedings{zhao2021accomontage,
   author    = {Jingwei Zhao and Gus Xia},
   title     = {AccoMontage: Accompaniment Arrangement via Phrase Selection and Style Transfer},
-  booktitle = {Proceedings of the 22nd International Society for Music Information Retrieval Conference, {ISMIR} 2021, Online, November 7-12, 2021},
+  booktitle = {Proceedings of the 22nd International Society for Music Information Retrieval Conference ({ISMIR} 2021)},
   pages     = {833--840},
   year      = {2021},
-  url       = {https://archives.ismir.net/ismir2021/paper/000104.pdf}
 }
 " tabindex="0" role="button" style="display: inherit;">
       <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-copy js-clipboard-copy-icon m-2">
@@ -66,8 +58,8 @@ If you find this code useful, please consider citing:
   </div></div>
 
 
-For inquries about our work, feel free to contact me at jz4807@nyu.edu.
+For inquries about our work, feel free to contact me at jzhao@u.nus.edu.
 
 Jingwei Zhao (Ph.D. Student in Data Science, NUS Graduate School)
 
-Jan. 08, 2022
+May 29, 2023
