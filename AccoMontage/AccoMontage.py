@@ -32,6 +32,7 @@ def set_premises(phrase_data_dir, edge_weights_dir, checkpoint_dir, reference_me
     model.eval()
     #load pop909 meta
     reference_check = pd.read_excel(reference_meta_dir)
+    del data, MELODY, ACC, CHORD, VELOCITY, CC
     return model, acc_pool, reference_check, (edge_weights, texture_filter)
 
 
