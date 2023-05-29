@@ -24,7 +24,7 @@ def set_premises(phrase_data_dir, edge_weights_dir, checkpoint_dir, reference_me
         (_mel, _acc, _chord, _vel, _cc, _song_reference) = find_by_length(MELODY, ACC, CHORD, VELOCITY, CC, length)
         acc_pool[length] = (_mel, _acc, _chord, _vel, _cc, _song_reference)
     del data, MELODY, ACC, CHORD, VELOCITY, CC
-    gc.collect()
+    gc.collect()    #for optimizing RAM usage
     texture_filter = get_texture_filter(acc_pool)   
     #load pre-computed transition score
     edge_weights=np.load(edge_weights_dir, allow_pickle=True)
@@ -56,11 +56,20 @@ def load_lead_sheet(DEMO_ROOT, SONG_NAME, SEGMENTATION, NOTE_SHIFT, melody_track
     LEADSHEET = np.concatenate((melody_roll, chord_roll[:, 1: -1]), axis=-1)    #T*142, quantized at 16th
     query_phrases = split_phrases(SEGMENTATION) #[('A', 8, 0), ('A', 8, 8), ('B', 8, 16), ('B', 8, 24)]
 
-    assert len(LEADSHEET)//16 >= sum([item[1] for item in query_phrases]), f'Mismatch in total bar numbers between the MIDI file and the phrase annotation. Detect {len(LEADSHEET)//16} bars in MIDI and {sum([item[1] for item in query_phrases])} bars in the provided phrase annotation.'
-
-    if len(LEADSHEET)//16 > sum([item[1] for item in query_phrases]):
-        LEADSHEET = LEADSHEET[:sum([item[1] for item in query_phrases])*16]
-        CHORD_TABLE = CHORD_TABLE[:sum([item[1] for item in query_phrases])*4]
+    midi_len = len(LEADSHEET)//16
+    anno_len = sum([item[1] for item in query_phrases])
+    if  midi_len > anno_len:
+        LEADSHEET = LEADSHEET[: anno_len*16]
+        CHORD_TABLE = CHORD_TABLE[: anno_len*4]
+        print(f'Mismatch warning: Detect {midi_len} bars in the lead sheet (MIDI) and {anno_len} bars in the provided phrase annotation. The lead sheet is truncated to {anno_len} bars.')
+    elif midi_len < anno_len:
+        pad_len = (anno_len - midi_len)*16
+        LEADSHEET = np.pad(LEADSHEET, ((0, pad_len), (0, 0)))
+        LEADSHEET[-pad_len:, 129] = 1
+        CHORD_TABLE = np.pad(CHORD_TABLE, ((0, pad_len//4), (0, 0)))
+        CHORD_TABLE[-pad_len//4:, 11] = -1
+        CHORD_TABLE[-pad_len//4:, -1] = -1
+        print(f'Mismatch warning: Detect {midi_len} bars in the lead sheet (MIDI) and {anno_len} bars in the provided phrase annotation. The lead sheet is padded to {anno_len} bars.')
     
     return LEADSHEET, CHORD_TABLE, query_phrases
 
@@ -82,7 +91,7 @@ def phrase_selection(LEADSHEET, query_phrases, reference_check, acc_pool, edge_w
                                             texture_filter,
                                             filter_id = PREFILTER, 
                                             spotlights = ref_spotlight(SPOTLIGHT, reference_check),
-                                            randomness = 0.1)
+                                            randomness = randomness)
     path = phrase_indice[0]
     shift = chord_shift[0]
     reference_set = []
