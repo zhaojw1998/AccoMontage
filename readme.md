@@ -1,15 +1,15 @@
 # AccoMontage
 <a href="https://colab.research.google.com/drive/1F4saDkh45KNxePD5yEcje61b0F09buDW?usp=sharing)" rel="nofollow"><img src="https://camo.githubusercontent.com/84f0493939e0c4de4e6dbe113251b4bfb5353e57134ffd9fcab6b8714514d4d1/68747470733a2f2f636f6c61622e72657365617263682e676f6f676c652e636f6d2f6173736574732f636f6c61622d62616467652e737667" alt="Open In Colab" data-canonical-src="https://colab.research.google.com/assets/colab-badge.svg" style="max-width: 100%;"></a>
 
-AccoMontage is a piano accompaniment arrangement system. It introduces a novel hybrid pathway, in which rule-based optimization (for high-level structure) and learning-based style transfer (for fien-grained conherency) are both leveraged to complement each other for high-quality generation. Our paper [*AccoMontage: Accompaniment Arrangement via Phrase Selection and Style Transfer*](https://arxiv.org/abs/2108.11213) is accepted by [ISMIR 2021](https://ismir2021.ismir.net/). This repository stores codes and demos of our work.
+AccoMontage is a piano accompaniment arrangement system. It introduces a novel hybrid pathway, in which rule-based optimization (for high-level structure) and learning-based style transfer (for fine-grained coherency) are both leveraged to complement each other for high-quality generation. Our paper [*AccoMontage: Accompaniment Arrangement via Phrase Selection and Style Transfer*](https://arxiv.org/abs/2108.11213) is accepted by [ISMIR 2021](https://ismir2021.ismir.net/). This repository stores codes and demos of our work.
 
 ## New Features
 AccoMontage now supports a few new features as follows:
 * Generation with **MIDI velocity** and **pedal control messages**.
 * Transitions among **phrases of any length** (1-bar, 2-bar, ..., 16-bar).
-* Input of general MIDI with **arbituary tracks** (besides melody) and arbituarily **complex chords** (e.g., 9th chords). Yet, we still quantize the chord sequence at 1-beat unit. If the melody is not on the first track, then the melody track index is also requested.
-* Whole pieces arrangement with **intro**, **interlude**, and **outro**.
-* **Spotlight** certain reference pieces from [POP909 dataset](https://github.com/music-x-lab/POP909-Dataset) as the donor of piano textures. Currently supported spotlight options include POP909 song index (e.g., 905), song name (e.g., '小城故事'), and/or artist name (e.g., '邓丽君'). For complete supported options, refer to the checktable `./checkpoints/pop909_quadraple_meters_index.xlsx`.
+* Input of general MIDI with **arbituary tracks** (besides melody) and arbituarily **complex chords** (e.g., 9th chords). Yet, we still quantize the chord sequence at 1-beat granularity. If the melody is not on the first track, then the melody track index is also requested.
+* Whole pieces piano arrangement with **intro**, **interlude**, and **outro**.
+* **Spotlight** on specific reference pieces as the donor of piano textures. Currently supported spotlight options include POP909 song index (e.g., 905), song name (e.g., '小城故事'), and/or artist name (e.g., '邓丽君'). For complete supported options, refer to checktable `./checkpoints/pop909_quadraple_meters_index.xlsx`.
 
 ## Run
 * Data and checkpoints required to run AccoMontage can be downloaded [here](https://drive.google.com/file/d/1zQ5xds8oeeAlnn_PK5e0PWNKyM7unUFO/view?usp=sharing) (updated May 29, 2023). After extraction, you should have a `./checkpoints/` folder with relevant pt and npz files inside. 
@@ -30,7 +30,7 @@ Thanks to Prof. Gus Xia, Yixiao Zhang, Liwei Lin, Junyan Jiang, Ziyu Wang, and S
 
 
 ## Cite Our Work
-If you find our paper and this repository useful, please consider citing our work:
+If you find our paper and this repository helpful, please consider citing our work:
 
 <div class="snippet-clipboard-content position-relative overflow-auto"><pre><code>@inproceedings{zhao2021accomontage,
   author    = {Jingwei Zhao and Gus Xia},
