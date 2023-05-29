@@ -22,6 +22,7 @@ Generated demos are listed in `./demo`. AccoMontage was applied as the backbones
 ## Acknowledgement
 Thanks to Prof. Gus Xia, Yixiao Zhang, Liwei Lin, Junyan Jiang, Ziyu Wang, and Shuqi Dai for their generous help to this work. Thanks to all NYUSH Music X Lab citizens for their encouragement and companion. The following repositories are referred to by this work:
 
+- https://github.com/music-x-lab/POP909-Dataset
 - https://github.com/ZZWaang/polyphonic-chord-texture-disentanglement
 - https://github.com/ZZWaang/PianoTree-VAE 
 - https://github.com/Dsqvival/hierarchical-structure-analysis
