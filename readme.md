@@ -1,5 +1,7 @@
 # AccoMontage
-<a href="https://colab.research.google.com/drive/1F4saDkh45KNxePD5yEcje61b0F09buDW?usp=sharing)" rel="nofollow"><img src="https://camo.githubusercontent.com/84f0493939e0c4de4e6dbe113251b4bfb5353e57134ffd9fcab6b8714514d4d1/68747470733a2f2f636f6c61622e72657365617263682e676f6f676c652e636f6d2f6173736574732f636f6c61622d62616467652e737667" alt="Open In Colab" data-canonical-src="https://colab.research.google.com/assets/colab-badge.svg" style="max-width: 100%;"></a>
+[![arXiv](https://img.shields.io/badge/arXiv-2108.11213-brightgreen.svg?logo=arXiv&style=flat-round)](https://arxiv.org/abs/2108.11213)
+[![GitHub](https://img.shields.io/badge/GitHub-demo-blue?logo=Github&style=flat-round)](https://zhaojw1998.github.io/accomontage_demo)
+[![Colab](https://img.shields.io/badge/Colab-tutorial-blue?logo=googlecolab&style=flat-round)](https://colab.research.google.com/drive/1F4saDkh45KNxePD5yEcje61b0F09buDW?usp=sharing)
 
 AccoMontage is a piano accompaniment arrangement system. It introduces a novel hybrid pathway, in which rule-based optimization (for high-level structure) and learning-based style transfer (for fine-grained coherency) are both leveraged to complement each other for high-quality generation. Our paper [*AccoMontage: Accompaniment Arrangement via Phrase Selection and Style Transfer*](https://arxiv.org/abs/2108.11213) is accepted by [ISMIR 2021](https://ismir2021.ismir.net/). This repository stores codes and demos of our work.
 
