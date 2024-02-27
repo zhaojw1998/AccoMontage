@@ -80,7 +80,10 @@ phrase_acc = []
 phrase_chord = []
 phrase_velocity = []
 phrase_cc = []
-for song in os.listdir(SEGMENTATION_ROOT):
+song_meta = []
+for song in tqdm(os.listdir(SEGMENTATION_ROOT)):
+    if song == 'Icon_':
+        continue
     meta_data = df[df.song_id == int(song)]
     num_beats = meta_data.num_beats_per_measure.values[0]
     num_quavers = meta_data.num_quavers_per_beat.values[0]
@@ -90,6 +93,7 @@ for song in os.listdir(SEGMENTATION_ROOT):
         melody = np.loadtxt(os.path.join(SEGMENTATION_ROOT, song, 'melody.txt'))
     except OSError:
         continue
+    song_meta.append(meta_data)
     melody[:, 1] = np.cumsum(melody[:, 1])
     melody[1:, 1] = melody[:-1, 1]
     melody = melody[1:]
@@ -130,7 +134,7 @@ for song in os.listdir(SEGMENTATION_ROOT):
 
     with open(os.path.join(SEGMENTATION_ROOT, song, 'human_label1.txt'), 'r') as file:
         segmentation = file.readlines()[0]
-    print(song, segmentation)
+    #print(song, segmentation)
     if not '\n' in segmentation:
         segmentation += '\n'
     segmentation = split_phrases(segmentation)
@@ -153,8 +157,8 @@ for song in os.listdir(SEGMENTATION_ROOT):
                     break
                 tracks[idx, start, control.number, 2] = control.value
 
-    #midi_recon = matrix2midi_with_dynamics(tracks, [0, 0, 0], init_tempo=90)
-    #midi_recon.write(f"seg_recon/{song}.mid")
+    midi_recon = matrix2midi_with_dynamics(tracks, [0, 0, 0], init_tempo=90)
+    midi_recon.write(f"seg_recon/{song}.mid")
 
     with open(os.path.join(POP909_MIDI_ROOT, song, f'chord_midi.txt'), 'r') as file:
         chord_annotation = file.readlines()
@@ -188,4 +192,6 @@ for song in os.listdir(SEGMENTATION_ROOT):
     phrase_velocity.append(song_velocity)
     phrase_cc.append(song_cc)
 
+quadraple_meters = pd.concat(song_meta, ignore_index=True)
+quadraple_meters.to_excel('./pop909_quadraple_meters_index.xlsx')
 np.savez_compressed('./phrase_data.npz', melody=phrase_melody, acc=phrase_acc, chord=phrase_chord, velocity=phrase_velocity, cc=phrase_cc)

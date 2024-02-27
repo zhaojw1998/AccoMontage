@@ -14,7 +14,7 @@ AccoMontage now supports a few new features as follows:
 * **Spotlight** on specific reference pieces as the donor of piano textures. Currently supported spotlight options include POP909 song index (e.g., 905), song name (e.g., '小城故事'), and/or artist name (e.g., '邓丽君'). For complete supported options, refer to checktable `./checkpoints/pop909_quadraple_meters_index.xlsx`.
 
 ## Run
-* Data and checkpoints required to run AccoMontage can be downloaded [here](https://drive.google.com/file/d/1zQ5xds8oeeAlnn_PK5e0PWNKyM7unUFO/view?usp=sharing) (updated May 29, 2023). After extraction, you should have a `./checkpoints/` folder with relevant pt and npz files inside. 
+* Data and checkpoints required to run AccoMontage can be downloaded [here](https://drive.google.com/file/d/1cYhSA2z70QiyzwTvGBS7oG9qYvovnvJg/view?usp=sharing) (updated Feb 27, 2024). After extraction, you should have a `./checkpoints/` folder with relevant pt and npz files inside. 
 * Our code is now arranged in a portable manner. You can follow the guidance in [`./AccoMontage_inference.ipynb`](./AccoMontage_inference.ipynb) and run AccoMontage.
 * Alternatively, AccoMontage is now accessible on [Google Colab](https://colab.research.google.com/drive/1F4saDkh45KNxePD5yEcje61b0F09buDW?usp=sharing), where you can quickly test it online. 
 
